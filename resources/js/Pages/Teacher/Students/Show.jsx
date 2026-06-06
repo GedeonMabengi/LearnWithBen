@@ -1,0 +1,6 @@
+import { Head, Link } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+
+export default function StudentsShow({ student }) {
+    return <AuthenticatedLayout><Head title={student.name} /><div className="mb-4"><Link href="/teacher/students" className="text-indigo-600">&larr; Back</Link></div><h1 className="mb-4 text-2xl font-bold">{student.name}</h1><div className="grid grid-cols-2 gap-4"><div className="rounded bg-white p-4 shadow"><h2 className="mb-2 font-semibold">Enrollments</h2><ul>{student.enrollments?.map((enrollment) => <li key={enrollment.id}>{enrollment.course?.title} - {enrollment.status}</li>)}</ul></div><div className="rounded bg-white p-4 shadow"><h2 className="mb-2 font-semibold">Tokens</h2><ul>{student.tokens?.map((token) => <li key={token.id}>{token.token_type?.name} - {token.status}</li>)}</ul></div><div className="rounded bg-white p-4 shadow"><h2 className="mb-2 font-semibold">Skills</h2><ul>{student.student_skills?.map((ss) => <li key={ss.id}>{ss.skill?.name} - validated at {ss.validated_at}</li>)}</ul></div></div><div className="mt-4"><Link href={`/teacher/students/${student.id}/notes`} className="rounded bg-indigo-600 px-4 py-2 text-white">View Notes</Link></div></AuthenticatedLayout>;
+}

@@ -1,0 +1,1 @@
+Met le code suivant dans les fichiers qui y sont destine (dans le dossier applicationKT):

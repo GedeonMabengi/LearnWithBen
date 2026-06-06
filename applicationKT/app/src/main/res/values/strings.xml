@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">EnglishApp</string>
+
+    <!-- Auth -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="name">Name</string>
+
+    <!-- Courses -->
+    <string name="courses">Courses</string>
+    <string name="enroll">Enroll</string>
+    <string name="no_courses">No courses available</string>
+
+    <!-- Tokens -->
+    <string name="my_tokens">My Tokens</string>
+    <string name="redeem_token">Redeem Token</string>
+    <string name="transfer_token">Transfer Token</string>
+    <string name="purchase">Purchase</string>
+
+    <!-- Resources -->
+    <string name="resources">Resources</string>
+    <string name="download">Download</string>
+
+    <!-- Recordings -->
+    <string name="recordings">Recordings</string>
+
+    <!-- Skills -->
+    <string name="skills">Skills</string>
+    <string name="progress">Progress</string>
+
+    <!-- Notifications -->
+    <string name="notifications">Notifications</string>
+
+    <!-- Profile -->
+    <string name="profile">Profile</string>
+    <string name="save">Save</string>
+
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="loading">Loading…</string>
+</resources>
