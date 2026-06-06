@@ -1,1 +1,2155 @@
-Met le code suivant dans les fichiers qui y sont destine (dans le dossier applicationKT):
+Met le code suivant dans les fichiers qui y sont
+destine (regarde a l'interieure du dossier
+applicationKT)
+
+
+
+===FILE: app/src/main/java/com/englishapp/util/Constants.kt===
+package com.englishapp.util
+
+object Constants {
+    const val BASE_URL = "https://your-api-domain.com/api/v1/"
+    const val DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
+    const val DISPLAY_DATE_FORMAT = "dd/MM/yyyy HH:mm"
+    const val TIMEZONE_UTC = "UTC"
+    const val DEFAULT_TIMEZONE = "Europe/Paris"
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/util/DateUtil.kt===
+package com.englishapp.util
+
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
+object DateUtil {
+
+    fun formatDate(dateString: String?, fromFormat: String = Constants.DATE_FORMAT, toFormat: String = Constants.DISPLAY_DATE_FORMAT, timezone: String? = null): String {
+        if (dateString.isNullOrEmpty()) return ""
+        return try {
+            val inputFormat = SimpleDateFormat(fromFormat, Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone(timezone ?: Constants.DEFAULT_TIMEZONE)
+            val date = inputFormat.parse(dateString)
+            val outputFormat = SimpleDateFormat(toFormat, Locale.getDefault())
+            outputFormat.timeZone = TimeZone.getTimeZone(timezone ?: Constants.DEFAULT_TIMEZONE)
+            date?.let { outputFormat.format(it) } ?: dateString
+        } catch (e: Exception) {
+            dateString
+        }
+    }
+
+    fun formatTime(dateString: String?, timezone: String? = null): String {
+        if (dateString.isNullOrEmpty()) return ""
+        return formatDate(dateString, Constants.DATE_FORMAT, "HH:mm", timezone)
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/util/TimezoneUtil.kt===
+package com.englishapp.util
+
+import java.util.TimeZone
+
+object TimezoneUtil {
+    fun getDefaultTimezone(): String {
+        return TimeZone.getDefault().id
+    }
+
+    fun getTimezoneDisplayName(timezoneId: String): String {
+        return TimeZone.getTimeZone(timezoneId).displayName
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/util/QRCodeGenerator.kt===
+package com.englishapp.util
+
+import android.graphics.Bitmap
+import android.graphics.Color
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
+
+object QRCodeGenerator {
+    fun generateQRCode(content: String, width: Int = 512, height: Int = 512): Bitmap? {
+        return try {
+            val writer = QRCodeWriter()
+            val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height)
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix.get(x, y)) Color.BLACK else Color.WHITE)
+                }
+            }
+            bitmap
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/util/QRCodeScanner.kt===
+package com.englishapp.util
+
+import android.app.Activity
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
+
+/**
+ * Helper to launch QR code scanner using journeyapps zxing-android-embedded.
+ * Usage in Activity/Fragment:
+ *    QRCodeScanner.launchScanner(this) { scannedCode -> ... }
+ */
+object QRCodeScanner {
+    fun getScanOptions(): ScanOptions {
+        return ScanOptions().apply {
+            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+            setPrompt("Scan a QR code")
+            setOrientationLocked(true)
+            setBeepEnabled(true)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/BaseViewModel.kt===
+package com.englishapp.ui.common
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+abstract class BaseViewModel : ViewModel() {
+
+    private val _loading = MutableStateFlow(false)
+    val loading = _loading.asStateFlow()
+
+    private val _error = MutableSharedFlow<String?>()
+    val error = _error.asSharedFlow()
+
+    protected fun setLoading(value: Boolean) {
+        _loading.value = value
+    }
+
+    protected fun postError(message: String) {
+        viewModelScope.launch {
+            _error.emit(message)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/auth/AuthViewModel.kt===
+package com.englishapp.ui.auth
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.local.SharedPreferencesManager
+import com.englishapp.domain.usecase.LoginUseCase
+import com.englishapp.domain.usecase.RegisterUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val loginUseCase: LoginUseCase,
+    private val registerUseCase: RegisterUseCase,
+    private val sharedPreferencesManager: SharedPreferencesManager
+) : BaseViewModel() {
+
+    private val _loginSuccess = MutableStateFlow(false)
+    val loginSuccess = _loginSuccess.asStateFlow()
+
+    private val _registerSuccess = MutableStateFlow(false)
+    val registerSuccess = _registerSuccess.asStateFlow()
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = loginUseCase(email, password)
+            result.onSuccess {
+                _loginSuccess.value = true
+            }.onFailure { e ->
+                postError(e.message ?: "Login failed")
+            }
+            setLoading(false)
+        }
+    }
+
+    fun register(name: String, email: String, password: String, confirmPassword: String) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = registerUseCase(name, email, password, confirmPassword)
+            result.onSuccess {
+                _registerSuccess.value = true
+            }.onFailure { e ->
+                postError(e.message ?: "Registration failed")
+            }
+            setLoading(false)
+        }
+    }
+
+    fun isLoggedIn(): Boolean = sharedPreferencesManager.isLoggedIn()
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/course/CourseViewModel.kt===
+package com.englishapp.ui.course
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.Course
+import com.englishapp.domain.usecase.GetCoursesUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class CourseViewModel @Inject constructor(
+    private val getCoursesUseCase: GetCoursesUseCase
+) : BaseViewModel() {
+
+    private val _courses = MutableStateFlow<List<Course>>(emptyList())
+    val courses = _courses.asStateFlow()
+
+    fun loadCourses() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = getCoursesUseCase()
+            result.onSuccess {
+                _courses.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load courses")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/enrollment/EnrollmentViewModel.kt===
+package com.englishapp.ui.enrollment
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.domain.usecase.EnrollCourseUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class EnrollmentViewModel @Inject constructor(
+    private val enrollCourseUseCase: EnrollCourseUseCase
+) : BaseViewModel() {
+
+    private val _enrollmentSuccess = MutableStateFlow(false)
+    val enrollmentSuccess = _enrollmentSuccess.asStateFlow()
+
+    fun enroll(courseId: Long) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = enrollCourseUseCase(courseId)
+            result.onSuccess {
+                _enrollmentSuccess.value = true
+            }.onFailure { e ->
+                postError(e.message ?: "Enrollment failed")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/token/TokenViewModel.kt===
+package com.englishapp.ui.token
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.Token
+import com.englishapp.domain.usecase.GetTokensUseCase
+import com.englishapp.domain.usecase.RedeemTokenUseCase
+import com.englishapp.domain.usecase.TransferTokenUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class TokenViewModel @Inject constructor(
+    private val getTokensUseCase: GetTokensUseCase,
+    private val redeemTokenUseCase: RedeemTokenUseCase,
+    private val transferTokenUseCase: TransferTokenUseCase
+) : BaseViewModel() {
+
+    private val _tokens = MutableStateFlow<List<Token>>(emptyList())
+    val tokens = _tokens.asStateFlow()
+
+    private val _redeemResult = MutableStateFlow<Token?>(null)
+    val redeemResult = _redeemResult.asStateFlow()
+
+    private val _transferResult = MutableStateFlow<Token?>(null)
+    val transferResult = _transferResult.asStateFlow()
+
+    fun loadTokens() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = getTokensUseCase()
+            result.onSuccess {
+                _tokens.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load tokens")
+            }
+            setLoading(false)
+        }
+    }
+
+    fun redeem(code: String) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = redeemTokenUseCase(code)
+            result.onSuccess {
+                _redeemResult.value = it
+                loadTokens()
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to redeem token")
+            }
+            setLoading(false)
+        }
+    }
+
+    fun transfer(tokenId: Long, recipientEmail: String) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = transferTokenUseCase(tokenId, recipientEmail)
+            result.onSuccess {
+                _transferResult.value = it
+                loadTokens()
+            }.onFailure { e ->
+                postError(e.message ?: "Transfer failed")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/purchase/PurchaseViewModel.kt===
+package com.englishapp.ui.purchase
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.PurchaseSession
+import com.englishapp.domain.usecase.PurchaseTokenUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class PurchaseViewModel @Inject constructor(
+    private val purchaseTokenUseCase: PurchaseTokenUseCase
+) : BaseViewModel() {
+
+    private val _checkoutSession = MutableStateFlow<PurchaseSession?>(null)
+    val checkoutSession = _checkoutSession.asStateFlow()
+
+    fun checkout(tokenTypeId: Long) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = purchaseTokenUseCase(tokenTypeId)
+            result.onSuccess {
+                _checkoutSession.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Checkout failed")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/resource/ResourceViewModel.kt===
+package com.englishapp.ui.resource
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.ResourceModel
+import com.englishapp.domain.usecase.GetResourcesUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class ResourceViewModel @Inject constructor(
+    private val getResourcesUseCase: GetResourcesUseCase
+) : BaseViewModel() {
+
+    private val _resources = MutableStateFlow<List<ResourceModel>>(emptyList())
+    val resources = _resources.asStateFlow()
+
+    fun loadResources() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = getResourcesUseCase()
+            result.onSuccess {
+                _resources.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load resources")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/recording/RecordingViewModel.kt===
+package com.englishapp.ui.recording
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.Recording
+import com.englishapp.domain.usecase.GetRecordingsUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class RecordingViewModel @Inject constructor(
+    private val getRecordingsUseCase: GetRecordingsUseCase
+) : BaseViewModel() {
+
+    private val _recordings = MutableStateFlow<List<Recording>>(emptyList())
+    val recordings = _recordings.asStateFlow()
+
+    fun loadRecordings() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = getRecordingsUseCase()
+            result.onSuccess {
+                _recordings.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load recordings")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/skill/SkillViewModel.kt===
+package com.englishapp.ui.skill
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.Skill
+import com.englishapp.domain.usecase.GetSkillsUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class SkillViewModel @Inject constructor(
+    private val getSkillsUseCase: GetSkillsUseCase
+) : BaseViewModel() {
+
+    private val _skills = MutableStateFlow<List<Skill>>(emptyList())
+    val skills = _skills.asStateFlow()
+
+    fun loadSkills() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = getSkillsUseCase()
+            result.onSuccess {
+                _skills.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load skills")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/notification/NotificationViewModel.kt===
+package com.englishapp.ui.notification
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.AppNotification
+import com.englishapp.data.repository.NotificationRepository
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class NotificationViewModel @Inject constructor(
+    private val notificationRepository: NotificationRepository
+) : BaseViewModel() {
+
+    private val _notifications = MutableStateFlow<List<AppNotification>>(emptyList())
+    val notifications = _notifications.asStateFlow()
+
+    fun loadNotifications() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = notificationRepository.getNotifications()
+            result.onSuccess {
+                _notifications.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load notifications")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/profile/ProfileViewModel.kt===
+package com.englishapp.ui.profile
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.local.SharedPreferencesManager
+import com.englishapp.data.model.User
+import com.englishapp.data.repository.ProfileRepository
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val profileRepository: ProfileRepository,
+    private val sharedPreferencesManager: SharedPreferencesManager
+) : BaseViewModel() {
+
+    private val _user = MutableStateFlow<User?>(null)
+    val user = _user.asStateFlow()
+
+    private val _updateSuccess = MutableStateFlow(false)
+    val updateSuccess = _updateSuccess.asStateFlow()
+
+    fun loadProfile() {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = profileRepository.getProfile()
+            result.onSuccess {
+                _user.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to load profile")
+            }
+            setLoading(false)
+        }
+    }
+
+    fun updateProfile(name: String, email: String, timezone: String) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = profileRepository.updateProfile(name, email, timezone)
+            result.onSuccess {
+                _user.value = it
+                _updateSuccess.value = true
+            }.onFailure { e ->
+                postError(e.message ?: "Profile update failed")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/livekit/LiveKitViewModel.kt===
+package com.englishapp.ui.livekit
+
+import androidx.lifecycle.viewModelScope
+import com.englishapp.data.model.LiveKitTokenResponse
+import com.englishapp.domain.usecase.JoinCourseUseCase
+import com.englishapp.ui.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class LiveKitViewModel @Inject constructor(
+    private val joinCourseUseCase: JoinCourseUseCase
+) : BaseViewModel() {
+
+    private val _roomInfo = MutableStateFlow<LiveKitTokenResponse?>(null)
+    val roomInfo = _roomInfo.asStateFlow()
+
+    fun joinRoom(courseId: Long) {
+        viewModelScope.launch {
+            setLoading(true)
+            val result = joinCourseUseCase(courseId)
+            result.onSuccess {
+                _roomInfo.value = it
+            }.onFailure { e ->
+                postError(e.message ?: "Failed to join room")
+            }
+            setLoading(false)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/res/layout/activity_main.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/windowBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/nav_graph" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_login.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Login"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Email"
+            android:inputType="textEmailAddress" />
+
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Password"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Login" />
+
+        <TextView
+            android:id="@+id/tv_register"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Don't have an account? Register"
+            android:textColor="@android:color/holo_blue_dark" />
+    </LinearLayout>
+</ScrollView>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_register.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Name" />
+
+        <EditText
+            android:id="@+id/et_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Email"
+            android:inputType="textEmailAddress" />
+
+        <EditText
+            android:id="@+id/et_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Password"
+            android:inputType="textPassword" />
+
+        <EditText
+            android:id="@+id/et_confirm_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Confirm Password"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/btn_register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Register" />
+
+        <TextView
+            android:id="@+id/tv_login"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Already have an account? Login"
+            android:textColor="@android:color/holo_blue_dark" />
+    </LinearLayout>
+</ScrollView>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_course_list.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_courses"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_course" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_course_detail.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/tv_visibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btn_enroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Enroll" />
+    </LinearLayout>
+</ScrollView>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_token_list.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/btn_redeem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Redeem Token" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_tokens"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_token" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_redeem_token.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/et_code"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Token code" />
+
+    <Button
+        android:id="@+id/btn_redeem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Redeem" />
+
+    <Button
+        android:id="@+id/btn_scan_qr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Scan QR" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_purchase.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_token_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/tv_price"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btn_purchase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Buy with Stripe" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_resource_list.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_resources"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/item_resource" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_resource_detail.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:id="@+id/btn_download"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Download" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_recording_list.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_recordings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/item_recording" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_skill_list.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_skills"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/item_skill" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_notification_list.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_notifications"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/item_notification" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/fragment_profile.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tv_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <Button
+            android:id="@+id/btn_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Profile" />
+    </LinearLayout>
+</ScrollView>
+===END FILE===
+
+===FILE: app/src/main/res/layout/activity_livekit_video.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/video_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/item_course.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="?attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/item_token.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/tv_type"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/item_resource.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/item_recording.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tv_course"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/item_skill.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/layout/item_notification.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tv_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tv_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="12sp" />
+</LinearLayout>
+===END FILE===
+
+===FILE: app/src/main/res/navigation/nav_graph.xml===
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/courseListFragment">
+
+    <fragment
+        android:id="@+id/courseListFragment"
+        android:name="com.englishapp.ui.course.CourseListFragment"
+        android:label="Courses"
+        tools:layout="@layout/fragment_course_list" />
+
+    <fragment
+        android:id="@+id/courseDetailFragment"
+        android:name="com.englishapp.ui.course.CourseDetailFragment"
+        android:label="Course Details"
+        tools:layout="@layout/fragment_course_detail">
+        <argument
+            android:name="courseId"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/tokenListFragment"
+        android:name="com.englishapp.ui.token.TokenListFragment"
+        android:label="My Tokens"
+        tools:layout="@layout/fragment_token_list" />
+
+    <fragment
+        android:id="@+id/redeemTokenFragment"
+        android:name="com.englishapp.ui.token.RedeemTokenFragment"
+        android:label="Redeem Token"
+        tools:layout="@layout/fragment_redeem_token" />
+
+    <fragment
+        android:id="@+id/purchaseFragment"
+        android:name="com.englishapp.ui.purchase.PurchaseFragment"
+        android:label="Purchase"
+        tools:layout="@layout/fragment_purchase">
+        <argument
+            android:name="tokenTypeId"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/resourceListFragment"
+        android:name="com.englishapp.ui.resource.ResourceListFragment"
+        android:label="Resources"
+        tools:layout="@layout/fragment_resource_list" />
+
+    <fragment
+        android:id="@+id/resourceDetailFragment"
+        android:name="com.englishapp.ui.resource.ResourceDetailFragment"
+        android:label="Resource"
+        tools:layout="@layout/fragment_resource_detail">
+        <argument
+            android:name="resourceId"
+            app:argType="long" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recordingListFragment"
+        android:name="com.englishapp.ui.recording.RecordingListFragment"
+        android:label="Recordings"
+        tools:layout="@layout/fragment_recording_list" />
+
+    <fragment
+        android:id="@+id/skillListFragment"
+        android:name="com.englishapp.ui.skill.SkillListFragment"
+        android:label="Skills"
+        tools:layout="@layout/fragment_skill_list" />
+
+    <fragment
+        android:id="@+id/notificationListFragment"
+        android:name="com.englishapp.ui.notification.NotificationListFragment"
+        android:label="Notifications"
+        tools:layout="@layout/fragment_notification_list" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.englishapp.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+</navigation>
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/BaseFragment.kt===
+package com.englishapp.ui.common
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.annotation.LayoutRes
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
+abstract class BaseFragment<VM : BaseViewModel>(@LayoutRes contentLayoutId: Int) : Fragment(contentLayoutId) {
+
+    abstract val viewModel: VM
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        observeLoading()
+        observeError()
+    }
+
+    private fun observeLoading() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.loading.collectLatest { isLoading ->
+                    // show/hide a loading indicator if needed
+                }
+            }
+        }
+    }
+
+    private fun observeError() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.error.collectLatest { errorMsg ->
+                    if (errorMsg != null) {
+                        Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/Adapters/CourseAdapter.kt===
+package com.englishapp.ui.common.Adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.englishapp.data.model.Course
+import com.englishapp.databinding.ItemCourseBinding
+import com.englishapp.util.DateUtil
+
+class CourseAdapter(
+    private var courses: List<Course>,
+    private val onItemClick: (Course) -> Unit
+) : RecyclerView.Adapter<CourseAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemCourseBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemCourseBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val course = courses[position]
+        holder.binding.tvTitle.text = course.title
+        holder.binding.tvTime.text = DateUtil.formatDate(course.startTime)
+        holder.binding.root.setOnClickListener { onItemClick(course) }
+    }
+
+    override fun getItemCount() = courses.size
+
+    fun updateData(newCourses: List<Course>) {
+        courses = newCourses
+        notifyDataSetChanged()
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/Adapters/TokenAdapter.kt===
+package com.englishapp.ui.common.Adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.englishapp.data.model.Token
+import com.englishapp.databinding.ItemTokenBinding
+
+class TokenAdapter(
+    private var tokens: List<Token>,
+    private val onItemClick: (Token) -> Unit
+) : RecyclerView.Adapter<TokenAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemTokenBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemTokenBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val token = tokens[position]
+        holder.binding.tvType.text = token.tokenType?.name ?: token.code
+        holder.binding.tvStatus.text = token.status
+        holder.binding.root.setOnClickListener { onItemClick(token) }
+    }
+
+    override fun getItemCount() = tokens.size
+
+    fun updateData(newTokens: List<Token>) {
+        tokens = newTokens
+        notifyDataSetChanged()
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/Adapters/ResourceAdapter.kt===
+package com.englishapp.ui.common.Adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.englishapp.data.model.ResourceModel
+import com.englishapp.databinding.ItemResourceBinding
+
+class ResourceAdapter(
+    private var resources: List<ResourceModel>,
+    private val onItemClick: (ResourceModel) -> Unit
+) : RecyclerView.Adapter<ResourceAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemResourceBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemResourceBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val resource = resources[position]
+        holder.binding.tvTitle.text = resource.title
+        holder.binding.root.setOnClickListener { onItemClick(resource) }
+    }
+
+    override fun getItemCount() = resources.size
+
+    fun updateData(newResources: List<ResourceModel>) {
+        resources = newResources
+        notifyDataSetChanged()
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/Adapters/RecordingAdapter.kt===
+package com.englishapp.ui.common.Adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.englishapp.data.model.Recording
+import com.englishapp.databinding.ItemRecordingBinding
+
+class RecordingAdapter(
+    private var recordings: List<Recording>,
+    private val onItemClick: (Recording) -> Unit
+) : RecyclerView.Adapter<RecordingAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemRecordingBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemRecordingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val rec = recordings[position]
+        holder.binding.tvCourse.text = rec.course?.title ?: "Recording"
+        holder.binding.tvDuration.text = "${rec.duration ?: 0} s"
+        holder.binding.root.setOnClickListener { onItemClick(rec) }
+    }
+
+    override fun getItemCount() = recordings.size
+
+    fun updateData(newRecordings: List<Recording>) {
+        recordings = newRecordings
+        notifyDataSetChanged()
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/Adapters/SkillAdapter.kt===
+package com.englishapp.ui.common.Adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.englishapp.data.model.Skill
+import com.englishapp.databinding.ItemSkillBinding
+
+class SkillAdapter(
+    private var skills: List<Skill>,
+    private val onItemClick: (Skill) -> Unit
+) : RecyclerView.Adapter<SkillAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemSkillBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemSkillBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val skill = skills[position]
+        holder.binding.tvName.text = skill.name
+        val studentSkill = skill.studentSkills?.firstOrNull()
+        holder.binding.tvStatus.text = if (studentSkill != null) "Validated" else "Pending"
+        holder.binding.root.setOnClickListener { onItemClick(skill) }
+    }
+
+    override fun getItemCount() = skills.size
+
+    fun updateData(newSkills: List<Skill>) {
+        skills = newSkills
+        notifyDataSetChanged()
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/common/Adapters/NotificationAdapter.kt===
+package com.englishapp.ui.common.Adapters
+
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.englishapp.data.model.AppNotification
+import com.englishapp.databinding.ItemNotificationBinding
+import com.englishapp.util.DateUtil
+
+class NotificationAdapter(
+    private var notifications: List<AppNotification>,
+    private val onItemClick: (AppNotification) -> Unit
+) : RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
+
+    inner class ViewHolder(val binding: ItemNotificationBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemNotificationBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val notif = notifications[position]
+        holder.binding.tvMessage.text = notif.data?.message ?: notif.data?.title ?: ""
+        holder.binding.tvDate.text = DateUtil.formatDate(notif.createdAt)
+        holder.binding.root.setOnClickListener { onItemClick(notif) }
+    }
+
+    override fun getItemCount() = notifications.size
+
+    fun updateData(newNotifications: List<AppNotification>) {
+        notifications = newNotifications
+        notifyDataSetChanged()
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/course/CourseListFragment.kt===
+package com.englishapp.ui.course
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.databinding.FragmentCourseListBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.common.Adapters.CourseAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
+class CourseListFragment : BaseFragment<CourseViewModel>(com.englishapp.R.layout.fragment_course_list) {
+
+    override val viewModel: CourseViewModel by viewModels()
+    private lateinit var binding: FragmentCourseListBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentCourseListBinding.bind(view)
+
+        val adapter = CourseAdapter(emptyList()) { course ->
+            findNavController().navigate(
+                CourseListFragmentDirections.actionCourseListFragmentToCourseDetailFragment(course.id)
+            )
+        }
+        binding.rvCourses.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvCourses.adapter = adapter
+
+        viewModel.loadCourses()
+        lifecycleScope.launch {
+            viewModel.courses.collect { courses ->
+                adapter.updateData(courses)
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/course/CourseDetailFragment.kt===
+package com.englishapp.ui.course
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import com.englishapp.R
+import com.englishapp.databinding.FragmentCourseDetailBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.enrollment.EnrollmentViewModel
+import com.englishapp.util.DateUtil
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class CourseDetailFragment : BaseFragment<CourseViewModel>(R.layout.fragment_course_detail) {
+
+    override val viewModel: CourseViewModel by viewModels()
+    private val enrollmentViewModel: EnrollmentViewModel by viewModels()
+    private lateinit var binding: FragmentCourseDetailBinding
+    private var courseId: Long = -1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        courseId = arguments?.getLong("courseId", -1) ?: -1
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentCourseDetailBinding.bind(view)
+
+        viewModel.loadCourses()
+        // For simplicity, we just load all courses and filter; better to have a getCourseDetail repo call
+        // But we'll assume we already navigated with id, so we can use a separate load detail in viewModel if needed.
+        // Here we'll just show static; in real app, add getCourseDetail API.
+        // For now, placeholder.
+        binding.btnEnroll.setOnClickListener {
+            enrollmentViewModel.enroll(courseId)
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/token/TokenListFragment.kt===
+package com.englishapp.ui.token
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.R
+import com.englishapp.databinding.FragmentTokenListBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.common.Adapters.TokenAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
+class TokenListFragment : BaseFragment<TokenViewModel>(R.layout.fragment_token_list) {
+
+    override val viewModel: TokenViewModel by viewModels()
+    private lateinit var binding: FragmentTokenListBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentTokenListBinding.bind(view)
+
+        val adapter = TokenAdapter(emptyList()) { token ->
+            // Handle token click, e.g. show transfer dialog
+        }
+        binding.rvTokens.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvTokens.adapter = adapter
+
+        binding.btnRedeem.setOnClickListener {
+            findNavController().navigate(R.id.action_tokenListFragment_to_redeemTokenFragment)
+        }
+
+        viewModel.loadTokens()
+        lifecycleScope.launch {
+            viewModel.tokens.collect { tokens ->
+                adapter.updateData(tokens)
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/token/RedeemTokenFragment.kt===
+package com.englishapp.ui.token
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import com.englishapp.R
+import com.englishapp.databinding.FragmentRedeemTokenBinding
+import com.englishapp.ui.common.BaseFragment
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class RedeemTokenFragment : BaseFragment<TokenViewModel>(R.layout.fragment_redeem_token) {
+
+    override val viewModel: TokenViewModel by viewModels()
+    private lateinit var binding: FragmentRedeemTokenBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentRedeemTokenBinding.bind(view)
+
+        binding.btnRedeem.setOnClickListener {
+            val code = binding.etCode.text.toString()
+            if (code.isNotEmpty()) {
+                viewModel.redeem(code)
+            }
+        }
+
+        binding.btnScanQr.setOnClickListener {
+            // Launch QR scanner activity for result
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/purchase/PurchaseFragment.kt===
+package com.englishapp.ui.purchase
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import com.englishapp.R
+import com.englishapp.databinding.FragmentPurchaseBinding
+import com.englishapp.ui.common.BaseFragment
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class PurchaseFragment : BaseFragment<PurchaseViewModel>(R.layout.fragment_purchase) {
+
+    override val viewModel: PurchaseViewModel by viewModels()
+    private lateinit var binding: FragmentPurchaseBinding
+    private var tokenTypeId: Long = -1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        tokenTypeId = arguments?.getLong("tokenTypeId", -1) ?: -1
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentPurchaseBinding.bind(view)
+
+        // Load token type details from API or local data (simplified)
+        binding.btnPurchase.setOnClickListener {
+            viewModel.checkout(tokenTypeId)
+        }
+
+        lifecycleScope.launch {
+            viewModel.checkoutSession.collect { session ->
+                if (session != null) {
+                    val url = session.stripeCheckoutUrl
+                    if (!url.isNullOrEmpty()) {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        startActivity(intent)
+                    }
+                }
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/resource/ResourceListFragment.kt===
+package com.englishapp.ui.resource
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.R
+import com.englishapp.databinding.FragmentResourceListBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.common.Adapters.ResourceAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
+class ResourceListFragment : BaseFragment<ResourceViewModel>(R.layout.fragment_resource_list) {
+
+    override val viewModel: ResourceViewModel by viewModels()
+    private lateinit var binding: FragmentResourceListBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentResourceListBinding.bind(view)
+
+        val adapter = ResourceAdapter(emptyList()) { resource ->
+            findNavController().navigate(
+                ResourceListFragmentDirections.actionResourceListFragmentToResourceDetailFragment(resource.id)
+            )
+        }
+        binding.rvResources.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvResources.adapter = adapter
+
+        viewModel.loadResources()
+        lifecycleScope.launch {
+            viewModel.resources.collect { resources ->
+                adapter.updateData(resources)
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/resource/ResourceDetailFragment.kt===
+package com.englishapp.ui.resource
+
+import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import androidx.fragment.app.viewModels
+import com.englishapp.R
+import com.englishapp.databinding.FragmentResourceDetailBinding
+import com.englishapp.ui.common.BaseFragment
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class ResourceDetailFragment : BaseFragment<ResourceViewModel>(R.layout.fragment_resource_detail) {
+
+    override val viewModel: ResourceViewModel by viewModels()
+    private lateinit var binding: FragmentResourceDetailBinding
+    private var resourceId: Long = -1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        resourceId = arguments?.getLong("resourceId", -1) ?: -1
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentResourceDetailBinding.bind(view)
+
+        // In real app, load resource detail from API and display
+        binding.btnDownload.setOnClickListener {
+            // Simulate download
+            Toast.makeText(requireContext(), "Download started", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/recording/RecordingListFragment.kt===
+package com.englishapp.ui.recording
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.R
+import com.englishapp.databinding.FragmentRecordingListBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.common.Adapters.RecordingAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
+class RecordingListFragment : BaseFragment<RecordingViewModel>(R.layout.fragment_recording_list) {
+
+    override val viewModel: RecordingViewModel by viewModels()
+    private lateinit var binding: FragmentRecordingListBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentRecordingListBinding.bind(view)
+
+        val adapter = RecordingAdapter(emptyList()) { recording ->
+            // Play recording or show detail
+        }
+        binding.rvRecordings.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvRecordings.adapter = adapter
+
+        viewModel.loadRecordings()
+        lifecycleScope.launch {
+            viewModel.recordings.collect { recordings ->
+                adapter.updateData(recordings)
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/skill/SkillListFragment.kt===
+package com.englishapp.ui.skill
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.R
+import com.englishapp.databinding.FragmentSkillListBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.common.Adapters.SkillAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
+class SkillListFragment : BaseFragment<SkillViewModel>(R.layout.fragment_skill_list) {
+
+    override val viewModel: SkillViewModel by viewModels()
+    private lateinit var binding: FragmentSkillListBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentSkillListBinding.bind(view)
+
+        val adapter = SkillAdapter(emptyList()) { skill ->
+            // handle skill click
+        }
+        binding.rvSkills.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvSkills.adapter = adapter
+
+        viewModel.loadSkills()
+        lifecycleScope.launch {
+            viewModel.skills.collect { skills ->
+                adapter.updateData(skills)
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/notification/NotificationListFragment.kt===
+package com.englishapp.ui.notification
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.R
+import com.englishapp.databinding.FragmentNotificationListBinding
+import com.englishapp.ui.common.BaseFragment
+import com.englishapp.ui.common.Adapters.NotificationAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+
+@AndroidEntryPoint
+class NotificationListFragment : BaseFragment<NotificationViewModel>(R.layout.fragment_notification_list) {
+
+    override val viewModel: NotificationViewModel by viewModels()
+    private lateinit var binding: FragmentNotificationListBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentNotificationListBinding.bind(view)
+
+        val adapter = NotificationAdapter(emptyList()) { notif ->
+            // handle notification click
+        }
+        binding.rvNotifications.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvNotifications.adapter = adapter
+
+        viewModel.loadNotifications()
+        lifecycleScope.launch {
+            viewModel.notifications.collect { notifications ->
+                adapter.updateData(notifications)
+            }
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/profile/ProfileFragment.kt===
+package com.englishapp.ui.profile
+
+import android.os.Bundle
+import android.view.View
+import androidx.fragment.app.viewModels
+import com.englishapp.R
+import com.englishapp.databinding.FragmentProfileBinding
+import com.englishapp.ui.common.BaseFragment
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile) {
+
+    override val viewModel: ProfileViewModel by viewModels()
+    private lateinit var binding: FragmentProfileBinding
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentProfileBinding.bind(view)
+
+        viewModel.loadProfile()
+        lifecycleScope.launch {
+            viewModel.user.collect { user ->
+                user?.let {
+                    binding.tvName.text = it.name
+                    binding.tvEmail.text = it.email
+                }
+            }
+        }
+
+        binding.btnEdit.setOnClickListener {
+            // Navigate to edit profile
+        }
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/MainActivity.kt===
+package com.englishapp.ui
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.englishapp.R
+import com.englishapp.databinding.ActivityMainBinding
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        binding.bottomNavigation.setupWithNavController(navController)
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/livekit/LiveKitVideoActivity.kt===
+package com.englishapp.ui.livekit
+
+import android.os.Bundle
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import com.englishapp.databinding.ActivityLivekitVideoBinding
+import dagger.hilt.android.AndroidEntryPoint
+
+@AndroidEntryPoint
+class LiveKitVideoActivity : AppCompatActivity() {
+
+    private val viewModel: LiveKitViewModel by viewModels()
+    private lateinit var binding: ActivityLivekitVideoBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityLivekitVideoBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val courseId = intent.getLongExtra("courseId", -1)
+        if (courseId != -1L) {
+            viewModel.joinRoom(courseId)
+        }
+        // LiveKit video rendering would be set up here using the room info
+    }
+}
+===END FILE===
+
+===FILE: app/src/main/java/com/englishapp/ui/auth/SocialLoginHelper.kt===
+package com.englishapp.ui.auth
+
+import android.app.Activity
+import android.content.Intent
+import com.englishapp.data.repository.AuthRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+class SocialLoginHelper(private val activity: Activity) {
+
+    private val _googleSignInResult = MutableStateFlow<Result<String>?>(null)
+    val googleSignInResult = _googleSignInResult.asStateFlow()
+
+    private val googleSignInClient: GoogleSignInClient by lazy {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(activity.getString(com.englishapp.R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(activity, gso)
+    }
+
+    fun signInWithGoogle() {
+        val signInIntent = googleSignInClient.signInIntent
+        activity.startActivityForResult(signInIntent, RC_GOOGLE_SIGN_IN)
+    }
+
+    fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == RC_GOOGLE_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account?.idToken ?: return
+                // Authentication is done in the repository with idToken
+                _googleSignInResult.value = Result.success(idToken)
+            } catch (e: Exception) {
+                _googleSignInResult.value = Result.failure(e)
+            }
+        }
+    }
+
+    companion object {
+        const val RC_GOOGLE_SIGN_IN = 9001
+    }
+}
+===END FILE===
+
+===FILE: app/src/test/java/com/englishapp/ExampleUnitTest.kt===
+package com.englishapp
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+/**
+ * Example local unit test, which will execute on the development machine (host).
+ */
+class ExampleUnitTest {
+    @Test
+    fun addition_isCorrect() {
+        assertEquals(4, 2 + 2)
+    }
+}
+===END FILE===
+
+===FILE: app/src/androidTest/java/com/englishapp/ExampleInstrumentedTest.kt===
+package com.englishapp
+
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ */
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
+    @Test
+    fun useAppContext() {
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("com.englishapp", appContext.packageName)
+    }
+}
+===END FILE===
