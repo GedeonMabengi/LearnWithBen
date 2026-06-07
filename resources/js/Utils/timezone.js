@@ -2,7 +2,7 @@
  * Utility functions for timezone handling.
  */
 
-import { format, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { format, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { fr } from 'date-fns/locale';
 
 /**
@@ -23,7 +23,7 @@ export function detectUserTimezone() {
  */
 export function formatInTimezone(dateInput, formatStr = 'Pp', timezone = 'UTC', options = {}) {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    const zonedDate = utcToZonedTime(date, timezone);
+    const zonedDate = toZonedTime(date, timezone);
     return format(zonedDate, formatStr, { timeZone: timezone, locale: options.locale || fr, ...options });
 }
 
@@ -36,7 +36,7 @@ export function formatInTimezone(dateInput, formatStr = 'Pp', timezone = 'UTC', 
  */
 export function convertToUTC(dateInput, timezone) {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    const utcDate = zonedTimeToUtc(date, timezone);
+    const utcDate = fromZonedTime(date, timezone);
     return utcDate.toISOString();
 }
 
@@ -67,7 +67,7 @@ export function getCommonTimezones() {
  * Get the offset abbreviation for a timezone at a given date.
  */
 export function getTimezoneAbbreviation(timezone, date = new Date()) {
-    const zonedDate = utcToZonedTime(date, timezone);
+    const zonedDate = toZonedTime(date, timezone);
     const formatted = format(zonedDate, 'zzz', { timeZone: timezone });
     return formatted;
 }

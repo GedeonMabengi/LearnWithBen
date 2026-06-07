@@ -8750,7 +8750,7 @@
             "time": "2026-05-22T11:45:29+00:00"
         },
         {
-            "name": "laravel/pail",
+            // "name": "laravel/pail",
             "version": "v1.2.7",
             "source": {
                 "type": "git",

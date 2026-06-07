@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialiteController extends Controller
@@ -31,15 +33,24 @@ class SocialiteController extends Controller
             return redirect()->route('login')->withErrors(['email' => 'Google authentication failed.']);
         }
 
-        $user = User::updateOrCreate(
-            ['google_id' => $googleUser->getId()],
-            [
-                'name' => $googleUser->getName(),
-                'email' => $googleUser->getEmail(),
-                'google_id' => $googleUser->getId(),
+        $user = User::where('google_id', $googleUser->getId())
+            ->orWhere('email', $googleUser->getEmail())
+            ->first();
+
+        if (! $user) {
+            $user = new User([
+                'password' => Hash::make(Str::random(32)),
                 'role' => 'student',
-            ]
-        );
+            ]);
+        }
+
+        $user->forceFill([
+            'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
+            'email' => $googleUser->getEmail(),
+            'email_verified_at' => now(),
+            'google_id' => $googleUser->getId(),
+            'avatar_url' => $googleUser->getAvatar(),
+        ])->save();
 
         Auth::login($user);
 
@@ -67,15 +78,25 @@ class SocialiteController extends Controller
         }
 
         // Apple may not return email on subsequent logins
-        $user = User::updateOrCreate(
-            ['apple_id' => $appleUser->getId()],
-            [
-                'name' => $appleUser->getName() ?? 'Apple User',
-                'email' => $appleUser->getEmail() ?? $appleUser->getId() . '@apple.local',
-                'apple_id' => $appleUser->getId(),
+        $email = $appleUser->getEmail() ?? $appleUser->getId().'@apple.local';
+
+        $user = User::where('apple_id', $appleUser->getId())
+            ->orWhere('email', $email)
+            ->first();
+
+        if (! $user) {
+            $user = new User([
+                'password' => Hash::make(Str::random(32)),
                 'role' => 'student',
-            ]
-        );
+            ]);
+        }
+
+        $user->forceFill([
+            'name' => $appleUser->getName() ?: $user->name ?: 'Apple User',
+            'email' => $email,
+            'email_verified_at' => now(),
+            'apple_id' => $appleUser->getId(),
+        ])->save();
 
         Auth::login($user);
 
