@@ -44,4 +44,14 @@
     <string name="error">Error</string>
     <string name="success">Success</string>
     <string name="loading">Loading…</string>
+    <string name="nav_courses">Courses</string>
+    <string name="nav_course_detail">Course detail</string>
+    <string name="nav_resources">Resources</string>
+    <string name="nav_resource_detail">Resource detail</string>
+    <string name="nav_tokens">Tokens</string>
+    <string name="nav_redeem_token">Redeem token</string>
+    <string name="nav_skills">Skills</string>
+    <string name="nav_recordings">Recordings</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_profile">Profile</string>
 </resources>

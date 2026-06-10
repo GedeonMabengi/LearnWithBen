@@ -1,0 +1,158 @@
+Passer au contenu principal
+Logo Firebase
+Rechercher des produits
+Vue d'ensemble du projet
+Paramètres
+Nouveautés
+SQL Connect
+Nouveau
+Phone Verification
+Nouveau
+Catégories de produits
+Bases de données et stockage
+Sécurité
+Services d'IA
+Hébergement et sans serveur
+DevOps et engagement
+Analytics
+Formule : Spark
+Sans frais (0 $/mois)
+engteacher
+Testez les compétences d'agent pour que vos assistants de codage IA soient rapidement opérationnels dans Firebase
+engteacher
+Données analytiques
+Analytics
+Utilisateurs actifs par jour
+- - -
+Aucune donnée
+for the last 14 days
+Fidélisation (1er jour)
+- - -
+Aucune donnée
+for the last 14 days
+
+Track your revenue!
+Associer à AdMob
+Associer à Google Play
+Cette semaine
+La semaine dernière
+Étapes suivantes avec Gemini
+Consulter la documentation
+
+Parlez-nous un peu plus de votre application
+Décrivez votre application pour que Gemini vous suggère d'autres produits qui vous aideront à l'améliorer
+
+Utilisez Analytics et des produits de surveillance
+En savoir plus sur Google Analytics et les produits de surveillance Firebase
+
+Ajoutez de l'IA à votre application
+Découvrez comment intégrer l'IA à votre application
+
+Monétisez votre application
+Découvrez comment utiliser AdMob, personnaliser l'expérience utilisateur et augmenter vos revenus
+
+Testez et déployez des fonctionnalités
+Assurez-vous que vos fonctionnalités sont stables et agréables avant leur lancement
+
+Engagez les utilisateurs finaux
+Diffusez des campagnes de messagerie ciblées et personnalisées
+Gemini
+dans Firebase
+Conversation avec Gemini dans Firebase
+Vous avez envoyé
+
+une ia m'a dit Configuration Firebase (étape cruciale) Avant la première compilation, tu dois : Créer un projet sur Firebase Console Ajouter une app Android avec le package com.engteacher.app Télécharger le google-services.json et le placer dans app/ Activer Authentication (Email/Password) et Cloud Firestore comment recuperer les infos utile si je viens de creer un nouveau projet ?
+Gemini a dit
+That's fantastic that you're diving into Firebase! It's a powerful platform for building amazing apps. Here’s a quick guide to get your project set up:
+
+Step 1: Choose your Firebase products
+For your use case, I recommend:
+
+Cloud Firestore: Perfect for storing your app's data in a scalable NoSQL cloud database and getting real-time updates.
+
+Firebase Authentication: Essential for managing user sign-up and sign-in, especially with Email/Password as you requested.
+
+Firebase Crashlytics: Helps you track and prioritize stability issues in your app, ensuring a smooth user experience.
+
+Step 2: Set up Firebase products using the Console or CLI
+
+Step 3: Register your app in your Firebase project
+
+Step 4: Connect your app's codebase to Firebase
+
+Let's get started. Which of these steps would you like to learn more about?
+
+Saisir un message
+Ask Gemini
+Vérifiez les réponses de Gemini, car il peut faire des erreurs
+Le nom de votre package correspond généralement à la valeur applicationId qui se trouve dans le fichier build.gradle au niveau de l'application
+Boostez votre développement ! Essayez Cloud Shell pour accéder à la CLI Firebase intégrée et exécuter les émulateurs Firebase directement dans une machine virtuelle.
+Data Connect devient SQL Connect, notre base de données PostgreSQL alimentée par Cloud SQL
+La vérification du numéro de téléphone est une méthode rapide et sécurisée pour valider le numéro de téléphone des utilisateurs
+Cliquez sur "Mettre à niveau" pour savoir comment obtenir un crédit sans frais de 300 $.
+Accéder à la documentation
+Ajouter Firebase à votre application Android
+Terminé
+Enregistrer l'application
+Nom du package Android : com.engteacher.app, pseudo de l'application : LearnWithBen
+Modifiable
+Télécharger, puis ajouter un fichier de configuration
+
+
+3
+Ajouter le SDK Firebase
+Instructions pour Gradle
+|
+UnityC++
+tip:
+Vous utilisez toujours la syntaxe buildscript pour gérer les plug-ins ? Découvrez comment ajouter des plug-ins Firebase à l'aide de cette syntaxe.
+Pour rendre les valeurs de configuration google-services.json accessibles aux SDK Firebase, vous devez disposer du plug-in Gradle des services Google.
+
+
+DSL Kotlin (build.gradle.kts)
+
+Groovy (build.gradle)
+Ajoutez le plug-in en tant que dépendance du fichier build.gradle.kts au niveau du projet :
+
+Fichier Gradle au niveau racine (au niveau du projet) (<project>/build.gradle.kts) :
+plugins {
+  // ...
+
+  // Add the dependency for the Google services Gradle plugin
+  id("com.google.gms.google-services") version "4.4.4" apply false
+
+}
+Ensuite, dans le fichier build.gradle.kts de votre module (au niveau de l'application), ajoutez le plug-in google-services et tous les SDK Firebase que vous souhaitez utiliser dans votre application :
+
+Fichier Gradle du module (au niveau de l'application) (<project>/<app-module>/build.gradle.kts) :
+plugins {
+  id("com.android.application")
+
+  // Add the Google services Gradle plugin
+  id("com.google.gms.google-services")
+
+  ...
+}
+
+dependencies {
+  // Import the Firebase BoM
+  implementation(platform("com.google.firebase:firebase-bom:34.14.0"))
+
+
+  // TODO: Add the dependencies for Firebase products you want to use
+  // When using the BoM, don't specify versions in Firebase dependencies
+  implementation("com.google.firebase:firebase-analytics")
+
+
+  // Add the dependencies for any other desired Firebase products
+  // https://firebase.google.com/docs/android/setup#available-libraries
+}
+Si vous suivez la nomenclature BoM Android Firebase, votre application utilisera toujours des versions compatibles de la bibliothèque Firebase. En savoir plus
+Après avoir ajouté le plug-in et les SDK souhaités, synchronisez votre projet Android avec les fichiers Gradle.
+4
+Étapes suivantes
+
+
+
+
+

@@ -1,9 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(options),
     method: 'get',
@@ -16,72 +16,75 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
 index.url = (options?: RouteQueryOptions) => {
     return index.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(options),
     method: 'get',
 })
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(options),
     method: 'head',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
+const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(options),
+    method: 'get',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
+indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(options),
+    method: 'get',
+})
+
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::index
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
- * @route '/api/v1/teacher/resources'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:13
+* @route '/api/v1/teacher/resources'
+*/
+indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+index.form = indexForm
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::store
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
+* @route '/api/v1/teacher/resources'
+*/
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(options),
     method: 'post',
@@ -94,49 +97,50 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::store
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
+* @route '/api/v1/teacher/resources'
+*/
 store.url = (options?: RouteQueryOptions) => {
     return store.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::store
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
- * @route '/api/v1/teacher/resources'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
+* @route '/api/v1/teacher/resources'
+*/
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(options),
     method: 'post',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::store
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
- * @route '/api/v1/teacher/resources'
- */
-    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: store.url(options),
-        method: 'post',
-    })
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
+* @route '/api/v1/teacher/resources'
+*/
+const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: store.url(options),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::store
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
- * @route '/api/v1/teacher/resources'
- */
-        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: store.url(options),
-            method: 'post',
-        })
-    
-    store.form = storeForm
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:18
+* @route '/api/v1/teacher/resources'
+*/
+storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: store.url(options),
+    method: 'post',
+})
+
+store.form = storeForm
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 export const show = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
@@ -149,31 +153,31 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 show.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { resource: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-            args = { resource: args.id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { resource: args.id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    resource: args[0],
-                }
+            resource: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        resource: typeof args.resource === 'object'
-                ? args.resource.id
-                : args.resource,
-                }
+        resource: typeof args.resource === 'object'
+        ? args.resource.id
+        : args.resource,
+    }
 
     return show.definition.url
             .replace('{resource}', parsedArgs.resource.toString())
@@ -182,63 +186,66 @@ show.url = (args: { resource: number | { id: number } } | [resource: number | { 
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 show.get = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 show.head = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
-    const showForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: show.url(args, options),
-        method: 'get',
-    })
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+const showForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(args, options),
+    method: 'get',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
-        showForm.get = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, options),
-            method: 'get',
-        })
-            /**
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+showForm.get = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(args, options),
+    method: 'get',
+})
+
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::show
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
- * @route '/api/v1/teacher/resources/{resource}'
- */
-        showForm.head = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: show.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    show.form = showForm
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:33
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+showForm.head = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: show.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+show.form = showForm
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 export const update = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
@@ -251,31 +258,31 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 update.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { resource: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-            args = { resource: args.id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { resource: args.id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    resource: args[0],
-                }
+            resource: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        resource: typeof args.resource === 'object'
-                ? args.resource.id
-                : args.resource,
-                }
+        resource: typeof args.resource === 'object'
+        ? args.resource.id
+        : args.resource,
+    }
 
     return update.definition.url
             .replace('{resource}', parsedArgs.resource.toString())
@@ -284,73 +291,76 @@ update.url = (args: { resource: number | { id: number } } | [resource: number | 
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 update.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 update.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
-    const updateForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: update.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+const updateForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: update.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PUT',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
-        updateForm.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PUT',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-            /**
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+updateForm.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: update.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PUT',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::update
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
- * @route '/api/v1/teacher/resources/{resource}'
- */
-        updateForm.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PATCH',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    update.form = updateForm
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:38
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+updateForm.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: update.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+update.form = updateForm
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::destroy
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 export const destroy = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
@@ -363,31 +373,31 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::destroy
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 destroy.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { resource: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-            args = { resource: args.id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { resource: args.id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    resource: args[0],
-                }
+            resource: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        resource: typeof args.resource === 'object'
-                ? args.resource.id
-                : args.resource,
-                }
+        resource: typeof args.resource === 'object'
+        ? args.resource.id
+        : args.resource,
+    }
 
     return destroy.definition.url
             .replace('{resource}', parsedArgs.resource.toString())
@@ -396,50 +406,51 @@ destroy.url = (args: { resource: number | { id: number } } | [resource: number |
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::destroy
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
- * @route '/api/v1/teacher/resources/{resource}'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
+* @route '/api/v1/teacher/resources/{resource}'
+*/
 destroy.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::destroy
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
- * @route '/api/v1/teacher/resources/{resource}'
- */
-    const destroyForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: destroy.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'DELETE',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+const destroyForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: destroy.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'DELETE',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::destroy
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
- * @route '/api/v1/teacher/resources/{resource}'
- */
-        destroyForm.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: destroy.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'DELETE',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    destroy.form = destroyForm
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:45
+* @route '/api/v1/teacher/resources/{resource}'
+*/
+destroyForm.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: destroy.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'DELETE',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+destroy.form = destroyForm
+
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::grantAccess
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
- * @route '/api/v1/teacher/resources/{resource}/grant-access'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
+* @route '/api/v1/teacher/resources/{resource}/grant-access'
+*/
 export const grantAccess = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: grantAccess.url(args, options),
     method: 'post',
@@ -452,31 +463,31 @@ grantAccess.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::grantAccess
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
- * @route '/api/v1/teacher/resources/{resource}/grant-access'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
+* @route '/api/v1/teacher/resources/{resource}/grant-access'
+*/
 grantAccess.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { resource: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-            args = { resource: args.id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { resource: args.id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    resource: args[0],
-                }
+            resource: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        resource: typeof args.resource === 'object'
-                ? args.resource.id
-                : args.resource,
-                }
+        resource: typeof args.resource === 'object'
+        ? args.resource.id
+        : args.resource,
+    }
 
     return grantAccess.definition.url
             .replace('{resource}', parsedArgs.resource.toString())
@@ -485,42 +496,43 @@ grantAccess.url = (args: { resource: number | { id: number } } | [resource: numb
 
 /**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::grantAccess
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
- * @route '/api/v1/teacher/resources/{resource}/grant-access'
- */
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
+* @route '/api/v1/teacher/resources/{resource}/grant-access'
+*/
 grantAccess.post = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: grantAccess.url(args, options),
     method: 'post',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::grantAccess
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
- * @route '/api/v1/teacher/resources/{resource}/grant-access'
- */
-    const grantAccessForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: grantAccess.url(args, options),
-        method: 'post',
-    })
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
+* @route '/api/v1/teacher/resources/{resource}/grant-access'
+*/
+const grantAccessForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: grantAccess.url(args, options),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Api\V1\Teacher\ResourceController::grantAccess
- * @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
- * @route '/api/v1/teacher/resources/{resource}/grant-access'
- */
-        grantAccessForm.post = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: grantAccess.url(args, options),
-            method: 'post',
-        })
-    
-    grantAccess.form = grantAccessForm
+* @see app/Http/Controllers/Api/V1/Teacher/ResourceController.php:53
+* @route '/api/v1/teacher/resources/{resource}/grant-access'
+*/
+grantAccessForm.post = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: grantAccess.url(args, options),
+    method: 'post',
+})
+
+grantAccess.form = grantAccessForm
+
 const resources = {
     index: Object.assign(index, index),
-store: Object.assign(store, store),
-show: Object.assign(show, show),
-update: Object.assign(update, update),
-destroy: Object.assign(destroy, destroy),
-grantAccess: Object.assign(grantAccess, grantAccess),
+    store: Object.assign(store, store),
+    show: Object.assign(show, show),
+    update: Object.assign(update, update),
+    destroy: Object.assign(destroy, destroy),
+    grantAccess: Object.assign(grantAccess, grantAccess),
 }
 
 export default resources

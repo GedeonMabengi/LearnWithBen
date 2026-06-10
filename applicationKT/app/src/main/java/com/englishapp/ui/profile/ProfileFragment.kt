@@ -3,6 +3,7 @@ package com.englishapp.ui.profile
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.englishapp.R
 import com.englishapp.databinding.FragmentProfileBinding
 import com.englishapp.ui.common.BaseFragment

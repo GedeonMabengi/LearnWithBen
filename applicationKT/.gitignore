@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+.gradle-home/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local Android configuration
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build outputs
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Firebase and secrets
+app/google-services.json
+app/google-services1.json
+*.jks
+*.keystore
+.env
+.env.*
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

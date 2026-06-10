@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.englishapp.R
 import com.englishapp.databinding.FragmentPurchaseBinding
 import com.englishapp.ui.common.BaseFragment

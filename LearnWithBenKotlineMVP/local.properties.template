@@ -1,0 +1,9 @@
+# Ce fichier doit être renommé en "local.properties" et configuré
+# avec le chemin vers votre SDK Android
+
+# Exemple Windows :
+sdk.dir=C\\:\\Users\\VotreNom\\AppData\\Local\\Android\\Sdk
+
+# Exemple Linux/Mac :
+# sdk.dir=/home/votrenom/Android/Sdk
+# sdk.dir=/Users/votrenom/Library/Android/sdk

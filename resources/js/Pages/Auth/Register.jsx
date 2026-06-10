@@ -23,12 +23,16 @@ export default function Register() {
             Start learning
           </p>
           <h1 className="text-5xl font-semibold leading-tight tracking-tight text-black md:text-7xl">
-            Build your English routine.
+            Constituez votre routine d’anglais en quelques secondes.
           </h1>
           <p className="mt-6 max-w-md text-base leading-7 text-neutral-700">
-            Create an account and keep every course, resource and token
-            organized from day one.
+            Créez votre compte pour centraliser vos cours, votre suivi, vos feedbacks et vos ressources dans un espace sans distraction.
           </p>
+          <div className="mt-8 flex flex-wrap gap-3 text-xs uppercase tracking-[0.25em] text-black/60">
+            <span className="rounded-full border border-black/10 bg-black/5 px-3 py-2">Inscription</span>
+            <span className="rounded-full border border-black/10 bg-black/5 px-3 py-2">Professeur</span>
+            <span className="rounded-full border border-black/10 bg-black/5 px-3 py-2">Suivi</span>
+          </div>
         </section>
 
         <section className="border border-black bg-white p-6 shadow-[8px_8px_0_#000]">

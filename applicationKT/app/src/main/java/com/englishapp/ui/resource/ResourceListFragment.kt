@@ -2,7 +2,9 @@ package com.englishapp.ui.resource
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.englishapp.R
@@ -23,7 +25,8 @@ class ResourceListFragment : BaseFragment<ResourceViewModel>(R.layout.fragment_r
 
         val adapter = ResourceAdapter(emptyList()) { resource ->
             findNavController().navigate(
-                ResourceListFragmentDirections.actionResourceListFragmentToResourceDetailFragment(resource.id)
+                R.id.action_resourceListFragment_to_resourceDetailFragment,
+                bundleOf("resourceId" to resource.id)
             )
         }
         binding.rvResources.layoutManager = LinearLayoutManager(requireContext())

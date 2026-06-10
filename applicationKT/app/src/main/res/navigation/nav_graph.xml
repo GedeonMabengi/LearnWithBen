@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/courseListFragment">
+
+    <fragment
+        android:id="@+id/courseListFragment"
+        android:name="com.englishapp.ui.course.CourseListFragment"
+        android:label="@string/nav_courses">
+        <action
+            android:id="@+id/action_courseListFragment_to_courseDetailFragment"
+            app:destination="@id/courseDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/courseDetailFragment"
+        android:name="com.englishapp.ui.course.CourseDetailFragment"
+        android:label="@string/nav_course_detail">
+        <argument
+            android:name="courseId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/resourceListFragment"
+        android:name="com.englishapp.ui.resource.ResourceListFragment"
+        android:label="@string/nav_resources">
+        <action
+            android:id="@+id/action_resourceListFragment_to_resourceDetailFragment"
+            app:destination="@id/resourceDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/resourceDetailFragment"
+        android:name="com.englishapp.ui.resource.ResourceDetailFragment"
+        android:label="@string/nav_resource_detail">
+        <argument
+            android:name="resourceId"
+            app:argType="long"
+            android:defaultValue="-1L" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/tokenListFragment"
+        android:name="com.englishapp.ui.token.TokenListFragment"
+        android:label="@string/nav_tokens">
+        <action
+            android:id="@+id/action_tokenListFragment_to_redeemTokenFragment"
+            app:destination="@id/redeemTokenFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/redeemTokenFragment"
+        android:name="com.englishapp.ui.token.RedeemTokenFragment"
+        android:label="@string/nav_redeem_token" />
+
+    <fragment
+        android:id="@+id/skillListFragment"
+        android:name="com.englishapp.ui.skill.SkillListFragment"
+        android:label="@string/nav_skills" />
+
+    <fragment
+        android:id="@+id/recordingListFragment"
+        android:name="com.englishapp.ui.recording.RecordingListFragment"
+        android:label="@string/nav_recordings" />
+
+    <fragment
+        android:id="@+id/notificationListFragment"
+        android:name="com.englishapp.ui.notification.NotificationListFragment"
+        android:label="@string/nav_notifications" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.englishapp.ui.profile.ProfileFragment"
+        android:label="@string/nav_profile" />
+</navigation>

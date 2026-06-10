@@ -2,10 +2,12 @@ package com.englishapp.ui.course
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.englishapp.R
 import com.englishapp.databinding.FragmentCourseListBinding
 import com.englishapp.ui.common.BaseFragment
 import com.englishapp.ui.common.Adapters.CourseAdapter
@@ -24,7 +26,8 @@ class CourseListFragment : BaseFragment<CourseViewModel>(com.englishapp.R.layout
 
         val adapter = CourseAdapter(emptyList()) { course ->
             findNavController().navigate(
-                CourseListFragmentDirections.actionCourseListFragmentToCourseDetailFragment(course.id)
+                R.id.action_courseListFragment_to_courseDetailFragment,
+                bundleOf("courseId" to course.id)
             )
         }
         binding.rvCourses.layoutManager = LinearLayoutManager(requireContext())

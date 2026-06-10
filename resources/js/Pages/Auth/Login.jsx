@@ -22,12 +22,16 @@ export default function Login() {
             Welcome back
           </p>
           <h1 className="text-5xl font-semibold leading-tight tracking-tight text-black md:text-7xl">
-            Learn English with clarity.
+            Reprenez vos cours avec une interface simple et efficace.
           </h1>
           <p className="mt-6 max-w-md text-base leading-7 text-neutral-700">
-            Connect to your courses, tokens, resources and learning progress in
-            one quiet workspace.
+            Connectez-vous à votre espace, consultez vos ressources et continuez votre progression dans un tableau de bord clair.
           </p>
+          <div className="mt-8 flex flex-wrap gap-3 text-xs uppercase tracking-[0.25em] text-black/60">
+            <span className="rounded-full border border-black/10 bg-black/5 px-3 py-2">Cours</span>
+            <span className="rounded-full border border-black/10 bg-black/5 px-3 py-2">Feedback</span>
+            <span className="rounded-full border border-black/10 bg-black/5 px-3 py-2">Progression</span>
+          </div>
         </section>
 
         <section className="border border-black bg-white p-6 shadow-[8px_8px_0_#000]">

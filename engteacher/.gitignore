@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+.gradle-home/
+build/
+**/build/
+
+# Android / Kotlin local configuration
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Secrets and generated configs
+.env
+.env.*
+*.jks
+*.keystore
+google-services.json
+google-services1.json
+
+# OS files
+.DS_Store
+Thumbs.db
